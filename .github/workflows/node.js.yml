@@ -28,6 +28,10 @@ jobs:
         with:
           registry-type: public # Change to 'private' if using private registry
           mask-password: 'false'
+      outputs:
+      registry: ${{ steps.login-ecr.outputs.registry }}
+      docker_username: ${{ steps.login-ecr.outputs.docker_username_913524941030.dkr.ecr.eu-west-2.amazonaws.com}}
+      docker_password: ${{ steps.login-ecr.outputs.docker_password_Neolife5@_dkr_ecr_eu_west_2_amazonaws_com }}
 
       # Build and push Docker image
       - name: Build and push Docker image
