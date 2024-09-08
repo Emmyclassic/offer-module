@@ -1,3 +1,5 @@
+
+
 name: Build and Push to Amazon ECR
 
 on:
@@ -27,7 +29,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: public # Change to 'private' if using private registry
-          mask-password: false
 
       # Build and push Docker image
       - name: Build and push Docker image
