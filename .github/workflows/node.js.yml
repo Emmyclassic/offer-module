@@ -22,16 +22,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Login to Amazon ECR public
+      # Login to Amazon ECR 
       - name: Login to Amazon ECR Public
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          registry-type: public
+          registry-type: private
 
       # Build and push Docker image
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: public.ecr.aws/913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/offer-module-client:latest
+
           file: ./Dockerfile
