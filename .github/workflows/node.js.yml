@@ -1,4 +1,4 @@
-name: Build, Push to Amazon ECR, and Deploy to Kubernetes
+name: Build and Push to Amazon ECR
 
 on:
   push:
@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
+      # Checkout the repo
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Configure AWS credentials
+      # Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -22,13 +22,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Step 3: Login to Amazon ECR
+      # Login to Amazon ECR (Private)
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
 
-      # Step 4: Build and push Docker image to Amazon ECR
+      # Create .kube directory
+      - name: Create .kube directory
+        run: mkdir -p $HOME/.kube
+
+      # Set up kubeconfig
+      - name: Set up kubeconfig
+        run: echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+      # Build and push Docker image
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
@@ -36,19 +46,8 @@ jobs:
           tags: 913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest
           file: ./Dockerfile
 
-      # Step 5: Install kubectl
-      - name: Install kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
-
-      # Step 6: Set up kubeconfig (store it in GitHub secrets)
-      - name: Setup kubeconfig
-        run: |
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-
-      # Step 7: Update the Kubernetes Deployment to use the new image
+      # Deploy to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/offer-module-client offer-module-client=913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest --record
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
