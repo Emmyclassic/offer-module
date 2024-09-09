@@ -1,4 +1,4 @@
-name: Build and Push to Amazon ECR
+name: Build, Push to Amazon ECR, and Deploy to Kubernetes
 
 on:
   push:
@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repo
+      # Step 1: Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configure AWS credentials
+      # Step 2: Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -22,16 +22,33 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      # Login to Amazon ECR (Private)
+      # Step 3: Login to Amazon ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
         with:
           registry-type: private
 
-      # Build and push Docker image
+      # Step 4: Build and push Docker image to Amazon ECR
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: 913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest # Add a specific tag if necessary
+          tags: 913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest
           file: ./Dockerfile
+
+      # Step 5: Install kubectl
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+
+      # Step 6: Set up kubeconfig (store it in GitHub secrets)
+      - name: Setup kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+
+      # Step 7: Update the Kubernetes Deployment to use the new image
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/offer-module-client offer-module-client=913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest --record
