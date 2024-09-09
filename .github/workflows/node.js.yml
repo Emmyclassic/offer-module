@@ -33,5 +33,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: public.ecr.aws/xyz123/offer-module-client:latest
+          tags: public.ecr.aws/offer-module-client:latest
           file: ./Dockerfile
