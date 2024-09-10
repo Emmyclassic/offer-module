@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: offer-module-client
+  labels:
+    app: offer-module-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: offer-module-client
+  template:
+    metadata:
+      labels:
+        app: offer-module-client
+    spec:
+      containers:
+      - name: offer-module-client
+        image: 913524941030.dkr.ecr.us-east-1.amazonaws.com/offer-module-client:latest # Update with your image
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: offer-module-client-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: offer-module-client
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

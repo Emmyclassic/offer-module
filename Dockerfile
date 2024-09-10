@@ -10,7 +10,7 @@ COPY package-lock.json .
 RUN npm ci
 
 # Install specific npm version globally
-RUN npm install -g npm@10.8.2
+RUN npm install -g npm@10.8.3
 
 # Copy the rest of the application code
 COPY . .
